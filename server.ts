@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
+import nodemailer from 'nodemailer';
 
 import {
   initNoSqlDatabase,
@@ -31,6 +32,8 @@ import {
   createUserWithPasswordAsync,
   verifyPassword,
   recordUserLoginAsync,
+  saveUserResetOtpAsync,
+  updateUserPasswordAndClearOtpAsync,
   sanitizeUser,
 } from './server/nosqlDb.ts';
 
@@ -481,11 +484,12 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Check if account has password or was created via Google
+    // Check if account has password or was created via Google Sign-In
     if (!user.passwordHash) {
-      return res.status(401).json({
-        error: 'This account was registered via Google. Please click "Continue with Google" to sign in.',
-        code: 'USE_GOOGLE_LOGIN',
+      return res.status(400).json({
+        error:
+          "This account was created with Google Sign-In and has no password yet. Use 'Continue with Google' or click 'Forgot / Set Password' to add an 8-character password.",
+        code: 'GOOGLE_ACCOUNT_NO_PASSWORD',
         email: normalizedEmail,
       });
     }
@@ -512,6 +516,122 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('Login error:', err);
     return res.status(500).json({ error: err.message || 'Login failed' });
+  }
+});
+
+// 2B. Forgot / Set Password — Step 1: Request 6-digit Reset OTP
+app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'Please enter a valid email address.', code: 'INVALID_EMAIL' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await findUserByEmailAsync(normalizedEmail);
+    if (!user) {
+      return res.status(404).json({
+        error: 'No account found with this email.',
+        code: 'ACCOUNT_NOT_FOUND',
+      });
+    }
+
+    const otp = String(crypto.randomInt(100000, 1000000));
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await saveUserResetOtpAsync(normalizedEmail, otp, expiresAt);
+
+    const smtpUser = process.env.SMTP_USER?.trim();
+    const smtpPass = process.env.SMTP_PASS?.trim();
+    if (smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST?.trim() || 'smtp.gmail.com',
+          port: Number(process.env.SMTP_PORT || 587),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM?.trim() || smtpUser,
+          to: normalizedEmail,
+          subject: 'AgriMed AI — Password Reset / Setup Code',
+          text: `Your AgriMed AI 6-digit verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
+          html: `<p>Your <strong>AgriMed AI</strong> 6-digit password reset code is:</p><h2 style="letter-spacing:4px;color:#166534;">${otp}</h2><p>This code expires in 10 minutes.</p>`,
+        });
+        return res.json({
+          message: `Reset code sent to ${normalizedEmail}. Check your email (expires in 10 minutes).`,
+          emailSent: true,
+        });
+      } catch (mailErr: any) {
+        console.warn('SMTP send failed, falling back to demoOtp response:', mailErr?.message || mailErr);
+      }
+    }
+
+    return res.json({
+      message: 'Reset code generated.',
+      demoOtp: otp,
+    });
+  } catch (err: any) {
+    console.error('Forgot password error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to generate reset code' });
+  }
+});
+
+// 2C. Forgot / Set Password — Step 2: Verify OTP & Set New 8-Char Password
+app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'Please enter a valid email address.', code: 'INVALID_EMAIL' });
+    }
+    if (!otp || typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
+      return res.status(400).json({ error: 'Please enter the 6-digit reset code.', code: 'INVALID_OTP' });
+    }
+    if (!newPassword || typeof newPassword !== 'string' || !isValidSignupPassword(newPassword)) {
+      return res.status(400).json({
+        error: SIGNUP_PASSWORD_POLICY_ERROR,
+        code: 'WEAK_PASSWORD',
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await findUserByEmailAsync(normalizedEmail);
+    if (!user) {
+      return res.status(404).json({
+        error: 'No account found with this email.',
+        code: 'ACCOUNT_NOT_FOUND',
+      });
+    }
+
+    if (!user.resetOtp || !user.resetOtpExpires) {
+      return res.status(400).json({
+        error: 'No active reset code found. Please request a new 6-digit code.',
+        code: 'NO_ACTIVE_OTP',
+      });
+    }
+
+    if (Date.now() > Number(user.resetOtpExpires)) {
+      return res.status(400).json({
+        error: 'Reset code has expired. Please request a new 6-digit code.',
+        code: 'OTP_EXPIRED',
+      });
+    }
+
+    if (otp.trim() !== String(user.resetOtp).trim()) {
+      return res.status(400).json({
+        error: 'Invalid 6-digit reset code. Please check and try again.',
+        code: 'INVALID_OTP',
+      });
+    }
+
+    await updateUserPasswordAndClearOtpAsync(normalizedEmail, newPassword);
+
+    return res.json({
+      success: true,
+      message: 'Password updated! You can now log in.',
+    });
+  } catch (err: any) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to update password' });
   }
 });
 

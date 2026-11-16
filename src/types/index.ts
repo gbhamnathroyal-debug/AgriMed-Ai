@@ -127,6 +127,8 @@ export interface User {
   name: string;
   email: string;
   passwordHash?: string;
+  resetOtp?: string;
+  resetOtpExpires?: number;
   authProvider?: 'local' | 'google';
   avatarUrl?: string;
   role: UserRole;

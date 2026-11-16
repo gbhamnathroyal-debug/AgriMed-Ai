@@ -516,6 +516,8 @@ export function verifyPassword(password: string, storedHash?: string): boolean {
 export function sanitizeUser(user: User): User {
   const clone = { ...user };
   delete clone.passwordHash;
+  delete clone.resetOtp;
+  delete clone.resetOtpExpires;
   clone.role = clone.role === 'admin' ? 'admin' : 'farmer';
   return clone;
 }
@@ -647,6 +649,65 @@ export async function recordUserLoginAsync(userId: string): Promise<void> {
     user.lastLoginAt = now;
     atomicSaveCollection(usersFile, store.users);
   }
+}
+
+export async function saveUserResetOtpAsync(
+  email: string,
+  resetOtp: string,
+  resetOtpExpires: number
+): Promise<User | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (mongoDb) {
+    try {
+      await mongoDb.collection<User>('users').updateOne(
+        { email: normalizedEmail },
+        { $set: { resetOtp, resetOtpExpires } }
+      );
+    } catch (err: any) {
+      console.warn('[MongoDB Atlas] saveUserResetOtp error:', err?.message);
+    }
+  }
+  refreshUsersFromDiskIfNeeded();
+  const user = store.users.find((u) => u.email.toLowerCase() === normalizedEmail);
+  if (user) {
+    user.resetOtp = resetOtp;
+    user.resetOtpExpires = resetOtpExpires;
+    atomicSaveCollection(usersFile, store.users);
+    return user;
+  }
+  return await findUserByEmailAsync(normalizedEmail) || null;
+}
+
+export async function updateUserPasswordAndClearOtpAsync(
+  email: string,
+  newPassword: string
+): Promise<User | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const passwordHash = hashPassword(newPassword);
+
+  if (mongoDb) {
+    try {
+      await mongoDb.collection<User>('users').updateOne(
+        { email: normalizedEmail },
+        {
+          $set: { passwordHash },
+          $unset: { resetOtp: '', resetOtpExpires: '' },
+        }
+      );
+    } catch (err: any) {
+      console.warn('[MongoDB Atlas] updateUserPasswordAndClearOtp error:', err?.message);
+    }
+  }
+  refreshUsersFromDiskIfNeeded();
+  const user = store.users.find((u) => u.email.toLowerCase() === normalizedEmail);
+  if (user) {
+    user.passwordHash = passwordHash;
+    delete user.resetOtp;
+    delete user.resetOtpExpires;
+    atomicSaveCollection(usersFile, store.users);
+    return user;
+  }
+  return await findUserByEmailAsync(normalizedEmail) || null;
 }
 
 export async function upsertGoogleUserAsync(userData: {

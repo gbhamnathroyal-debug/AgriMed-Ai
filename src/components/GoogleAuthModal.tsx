@@ -69,12 +69,19 @@ export const GoogleAuthModal: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
   const [showGoogleStep, setShowGoogleStep] = useState<boolean>(false);
+  const [forgotMode, setForgotMode] = useState<'none' | 'request_otp' | 'verify_otp'>('none');
 
   // Standard email/password fields
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  // Forgot / Set Password OTP fields
+  const [resetOtp, setResetOtp] = useState<string>('');
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
 
   // Google Account Sign-In Step fields (used when VITE_GOOGLE_CLIENT_ID is unset in preview mode)
   const [googleEmail, setGoogleEmail] = useState<string>('');
@@ -84,7 +91,9 @@ export const GoogleAuthModal: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showSetPasswordQuickAction, setShowSetPasswordQuickAction] = useState<boolean>(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [dbStatus, setDbStatus] = useState<DbStatusResponse | null>(null);
   const [isCheckingDb, setIsCheckingDb] = useState<boolean>(false);
 
@@ -92,12 +101,19 @@ export const GoogleAuthModal: React.FC = () => {
     setName('');
     setEmail('');
     setPassword('');
+    setResetOtp('');
+    setDemoOtp(null);
+    setNewPassword('');
+    setShowNewPassword(false);
+    setForgotMode('none');
     setGoogleEmail('');
     setGoogleName('');
     setShowPassword(false);
     setShowGoogleStep(false);
     setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
     setInfoMessage(null);
+    setSuccessMessage(null);
     setIsLoading(false);
     setIsGoogleLoading(false);
   };
@@ -158,20 +174,40 @@ export const GoogleAuthModal: React.FC = () => {
   }, [isAuthModalOpen, initialAuthTab, authModalError, clearAuthModalError]);
 
   const signupPasswordCheck = evaluateSignupPassword(password);
+  const resetPasswordCheck = evaluateSignupPassword(newPassword);
 
   if (!isAuthModalOpen) return null;
 
   const handleTabSwitch = (newTab: 'signup' | 'login') => {
     setActiveTab(newTab);
     setShowGoogleStep(false);
+    setForgotMode('none');
     setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
     setInfoMessage(null);
+    setSuccessMessage(null);
+  };
+
+  const openForgotPasswordFlow = (prefillEmail?: string) => {
+    if (prefillEmail) setEmail(prefillEmail);
+    setForgotMode('request_otp');
+    setShowGoogleStep(false);
+    setResetOtp('');
+    setDemoOtp(null);
+    setNewPassword('');
+    setShowNewPassword(false);
+    setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
+    setInfoMessage(null);
+    setSuccessMessage(null);
   };
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
     setInfoMessage(null);
+    setSuccessMessage(null);
 
     if (!name.trim()) {
       setErrorMessage('Please enter your full name.');
@@ -215,7 +251,9 @@ export const GoogleAuthModal: React.FC = () => {
   const handleLogIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
     setInfoMessage(null);
+    setSuccessMessage(null);
 
     if (!email.trim() || !email.includes('@')) {
       setErrorMessage('Please enter your email address.');
@@ -239,14 +277,108 @@ export const GoogleAuthModal: React.FC = () => {
           setInfoMessage(res.error || 'Account not found—please Create Account first.');
           setActiveTab('signup');
           if (res.email) setEmail(res.email);
-        } else if (res.code === 'USE_GOOGLE_LOGIN') {
-          setErrorMessage(res.error || 'This account was registered via Google. Please use Continue with Google.');
+        } else if (res.code === 'GOOGLE_ACCOUNT_NO_PASSWORD' || res.code === 'USE_GOOGLE_LOGIN') {
+          setErrorMessage(
+            res.error ||
+              "This account was created with Google Sign-In and has no password yet. Use 'Continue with Google' or click 'Forgot / Set Password' to add an 8-character password."
+          );
+          setShowSetPasswordQuickAction(true);
         } else {
           setErrorMessage(res.error || 'Incorrect password');
         }
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRequestResetOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
+    setInfoMessage(null);
+    setSuccessMessage(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+      setErrorMessage('Please enter your registered email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorMessage(data.error || 'No account found with this email.');
+        return;
+      }
+
+      setEmail(normalizedEmail);
+      setDemoOtp(data.demoOtp || null);
+      setResetOtp('');
+      setForgotMode('verify_otp');
+      setInfoMessage(
+        data.demoOtp
+          ? 'Reset code generated below. Enter the 6-digit code and choose your new 8-character password.'
+          : data.message || 'Reset code sent to your email address.'
+      );
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Unable to request reset code right now.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setShowSetPasswordQuickAction(false);
+    setInfoMessage(null);
+    setSuccessMessage(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^\d{6}$/.test(resetOtp.trim())) {
+      setErrorMessage('Please enter the valid 6-digit OTP code.');
+      return;
+    }
+    if (!resetPasswordCheck.isValid) {
+      setErrorMessage(SIGNUP_PASSWORD_POLICY_ERROR);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          otp: resetOtp.trim(),
+          newPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorMessage(data.error || 'Failed to verify reset code. Please try again.');
+        return;
+      }
+
+      setForgotMode('none');
+      setActiveTab('login');
+      setPassword('');
+      setNewPassword('');
+      setResetOtp('');
+      setDemoOtp(null);
+      setSuccessMessage(data.message || 'Password updated! You can now log in.');
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Unable to update password right now.');
     } finally {
       setIsLoading(false);
     }
@@ -397,14 +529,18 @@ export const GoogleAuthModal: React.FC = () => {
             <h2 className="text-2xl font-black text-[#111827] tracking-tight">
               {showGoogleStep
                 ? 'Google Account Sign-In'
-                : activeTab === 'signup'
-                  ? 'Create Your Account'
-                  : 'Welcome Back'}
+                : forgotMode !== 'none'
+                  ? 'Set or Reset Password'
+                  : activeTab === 'signup'
+                    ? 'Create Your Account'
+                    : 'Welcome Back'}
             </h2>
             <p className="text-xs text-[#4B5563] max-w-xs mx-auto leading-relaxed">
               {showGoogleStep
                 ? 'Enter your Google email and full name to sign in or create your AgriMed AI profile.'
-                : authModalReason || 'Access Universal Crop Pathology, Precision 16L Spray Dosages, and AI Agronomist Advisory.'}
+                : forgotMode !== 'none'
+                  ? 'Verify your registered email with a 6-digit code to set or update your 8-character password.'
+                  : authModalReason || 'Access Universal Crop Pathology, Precision 16L Spray Dosages, and AI Agronomist Advisory.'}
             </p>
 
             {/* Live MongoDB Atlas Connection Badge */}
@@ -435,6 +571,17 @@ export const GoogleAuthModal: React.FC = () => {
             </div>
           </div>
 
+          {/* Success Message Banner */}
+          {successMessage && (
+            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5 animate-fadeIn">
+              <CheckCircle2 className="w-4 h-4 text-[#166534] shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="font-semibold block text-[#166534]">Success</strong>
+                <span>{successMessage}</span>
+              </div>
+            </div>
+          )}
+
           {/* Informational Message Banner */}
           {infoMessage && (
             <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-2.5 animate-fadeIn">
@@ -453,11 +600,237 @@ export const GoogleAuthModal: React.FC = () => {
               <div className="flex-1">
                 <strong className="font-semibold block text-rose-950">Authentication Error</strong>
                 <span>{errorMessage}</span>
+                {showSetPasswordQuickAction && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => openForgotPasswordFlow(email.trim().toLowerCase())}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#166534] hover:text-[#14532D] underline underline-offset-2 cursor-pointer"
+                    >
+                      <span>Set a Password Now →</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {showGoogleStep ? (
+          {forgotMode === 'request_otp' ? (
+            /* FORGOT / SET PASSWORD — STEP 1: REQUEST 6-DIGIT OTP */
+            <form onSubmit={handleRequestResetOtp} autoComplete="off" className="space-y-3.5 animate-fadeIn">
+              <div>
+                <label className="text-xs font-semibold text-[#111827] block mb-1">
+                  Registered Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#9CA3AF]">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    autoComplete="off"
+                    value={email}
+                    disabled={isLoading}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E2E8E1] rounded-xl text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#166534] focus:ring-1 focus:ring-[#166534]"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#166534] hover:bg-[#14532D] text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Generating 6-digit code...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Send 6-Digit Reset Code</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => {
+                  setForgotMode('none');
+                  setErrorMessage(null);
+                  setShowSetPasswordQuickAction(false);
+                  setInfoMessage(null);
+                }}
+                className="w-full py-2 text-xs font-semibold text-[#4B5563] hover:text-[#111827] flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Log In</span>
+              </button>
+            </form>
+          ) : forgotMode === 'verify_otp' ? (
+            /* FORGOT / SET PASSWORD — STEP 2: VERIFY OTP & SET NEW 8-CHAR PASSWORD */
+            <form onSubmit={handleResetPasswordSubmit} autoComplete="off" className="space-y-3.5 animate-fadeIn">
+              {demoOtp && (
+                <div className="p-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] text-xs flex items-center justify-between gap-2">
+                  <div>
+                    <span className="font-semibold block text-[11px] text-[#78350F]">
+                      Verification Code (Instant Test Mode)
+                    </span>
+                    <span className="font-mono font-extrabold text-sm tracking-widest text-[#1C1917]">
+                      {demoOtp}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setResetOtp(demoOtp)}
+                    className="px-2.5 py-1 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-[11px] font-bold cursor-pointer transition-colors shrink-0"
+                  >
+                    Fill Code
+                  </button>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold text-[#111827] block mb-1">
+                  6-Digit Reset Code (for {email})
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  autoComplete="off"
+                  value={resetOtp}
+                  disabled={isLoading}
+                  onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-3 py-2.5 bg-white border border-[#E2E8E1] rounded-xl text-xs font-mono tracking-widest text-[#111827] placeholder:font-sans placeholder:tracking-normal placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#166534] focus:ring-1 focus:ring-[#166534]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-[#111827] block mb-1">
+                  New Password{' '}
+                  <span className="text-[11px] font-normal text-[#6B7280]">
+                    (8 chars: 1 uppercase, 1 special, 6 numbers)
+                  </span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#9CA3AF]">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="off"
+                    value={newPassword}
+                    disabled={isLoading}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="e.g. A@123456"
+                    className="w-full pl-9 pr-10 py-2 bg-white border border-[#E2E8E1] rounded-xl text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#166534] focus:ring-1 focus:ring-[#166534]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#9CA3AF] hover:text-[#4B5563] cursor-pointer"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Live 4-Item Password Policy Checklist */}
+                <div className="mt-2 p-2.5 rounded-xl bg-[#F5F2EB] border border-[#E5DFD3] space-y-1.5">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                    {[
+                      { label: 'Exactly 8 characters', met: resetPasswordCheck.hasExactLength },
+                      { label: '1 uppercase letter (A-Z)', met: resetPasswordCheck.hasOneUppercase },
+                      { label: '1 special character (!@#$...)', met: resetPasswordCheck.hasOneSpecial },
+                      { label: '6 numbers (0-9)', met: resetPasswordCheck.hasSixNumbers },
+                    ].map((rule) => (
+                      <div
+                        key={rule.label}
+                        className={`flex items-center gap-1.5 font-medium transition-colors ${
+                          rule.met ? 'text-[#166534]' : 'text-[#57534E]'
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold shrink-0 ${
+                            rule.met
+                              ? 'bg-[#DCFCE7] text-[#166534] border border-[#86EFAC]'
+                              : 'bg-gray-200 text-[#57534E]'
+                          }`}
+                        >
+                          {rule.met ? '✓' : '•'}
+                        </span>
+                        <span className="truncate">{rule.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {newPassword.length > 0 && !resetPasswordCheck.isValid && (
+                    <p className="text-[11px] font-medium text-rose-600 leading-snug pt-0.5">
+                      {SIGNUP_PASSWORD_POLICY_ERROR}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || !/^\d{6}$/.test(resetOtp.trim()) || !resetPasswordCheck.isValid}
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#166534] hover:bg-[#14532D] text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Updating password...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Update Password</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setForgotMode('request_otp');
+                    setErrorMessage(null);
+                    setInfoMessage(null);
+                  }}
+                  className="text-xs font-semibold text-[#166534] hover:underline cursor-pointer"
+                >
+                  Resend Code
+                </button>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setForgotMode('none');
+                    setErrorMessage(null);
+                    setInfoMessage(null);
+                  }}
+                  className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Log In</span>
+                </button>
+              </div>
+            </form>
+          ) : showGoogleStep ? (
             /* CLEAN IN-MODAL GOOGLE ACCOUNT SIGN-IN STEP (NO POPUP / NO ORIGIN MISMATCH) */
             <form onSubmit={handleGoogleStepSubmit} autoComplete="off" className="space-y-3.5 animate-fadeIn">
               <div>
@@ -767,6 +1140,16 @@ export const GoogleAuthModal: React.FC = () => {
                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#9CA3AF] hover:text-[#4B5563]"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="mt-1.5 flex justify-end">
+                      <button
+                        type="button"
+                        disabled={isLoading || isGoogleLoading}
+                        onClick={() => openForgotPasswordFlow(email.trim().toLowerCase())}
+                        className="text-[11px] font-semibold text-[#166534] hover:text-[#14532D] hover:underline underline-offset-2 cursor-pointer"
+                      >
+                        Forgot / Set Password?
                       </button>
                     </div>
                   </div>
