@@ -71,6 +71,7 @@ function AppContent() {
     isAdmin, 
     logout, 
     openAuthModal, 
+    loginWithGoogle,
     authFetch 
   } = useAuth();
 
@@ -84,11 +85,103 @@ function AppContent() {
   const [selectedDiagnosticCrop, setSelectedDiagnosticCrop] = useState<string | undefined>(undefined);
   const [selectedDiagnosticSymptoms, setSelectedDiagnosticSymptoms] = useState<string[] | undefined>(undefined);
   const [language, setLanguage] = useState<LanguageCode>(() => getStoredLanguage());
+  const [isCompletingGoogleAuth, setIsCompletingGoogleAuth] = useState<boolean>(false);
 
   const handleLanguageChange = (nextLang: LanguageCode) => {
     setLanguage(nextLang);
     setStoredLanguage(nextLang);
   };
+
+  // Handle Google OAuth 2.0 Redirect response (#access_token=...) on page load
+  const handledOAuthRedirectRef = React.useRef(false);
+  useEffect(() => {
+    if (handledOAuthRedirectRef.current) return;
+    const rawHash = window.location.hash;
+    if (!rawHash) return;
+
+    const hashParams = new URLSearchParams(rawHash.startsWith('#') ? rawHash.slice(1) : rawHash);
+    const accessToken = hashParams.get('access_token');
+    const oauthError = hashParams.get('error');
+
+    if (!accessToken && !oauthError) return;
+    handledOAuthRedirectRef.current = true;
+
+    // Clear the OAuth hash from the URL bar immediately
+    window.history.replaceState(null, '', window.location.pathname);
+
+    const savedMode = sessionStorage.getItem('agrimed_google_mode');
+    const mode: 'signup' | 'login' = savedMode === 'login' ? 'login' : 'signup';
+    sessionStorage.removeItem('agrimed_google_mode');
+
+    if (oauthError) {
+      openAuthModal(
+        undefined,
+        mode,
+        oauthError === 'access_denied'
+          ? 'Google sign-in was cancelled. Click the Google button to choose your email again.'
+          : `Google sign-in returned an error: ${oauthError}`
+      );
+      return;
+    }
+
+    if (!accessToken) return;
+
+    setIsCompletingGoogleAuth(true);
+    (async () => {
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!userInfoRes.ok) {
+          throw new Error('Could not verify your Google profile. Please try signing in again.');
+        }
+
+        const profile = await userInfoRes.json();
+        const email = typeof profile?.email === 'string' ? profile.email.trim() : '';
+        if (!email) {
+          throw new Error('Google did not return an email address.');
+        }
+
+        const name = String(profile?.name || profile?.given_name || email.split('@')[0]).trim();
+        const sub = typeof profile?.sub === 'string' ? profile.sub : '';
+        const picture = typeof profile?.picture === 'string' ? profile.picture : undefined;
+
+        const res = await loginWithGoogle({
+          email,
+          name,
+          googleId: sub,
+          avatarUrl: picture,
+          mode,
+        });
+
+        if (!res.success) {
+          if (res.code === 'ACCOUNT_EXISTS') {
+            openAuthModal(
+              undefined,
+              'login',
+              res.error || 'This Google account already exists. Please switch to Log In.'
+            );
+          } else if (res.code === 'ACCOUNT_NOT_FOUND') {
+            openAuthModal(
+              undefined,
+              'signup',
+              res.error || 'No account found for this Google email. Please Create Account first.'
+            );
+          } else {
+            openAuthModal(undefined, mode, res.error || 'Google sign-in failed. Please try again.');
+          }
+        }
+      } catch (err: any) {
+        openAuthModal(
+          undefined,
+          mode,
+          err?.message || 'Unable to complete Google sign-in. Please try again.'
+        );
+      } finally {
+        setIsCompletingGoogleAuth(false);
+      }
+    })();
+  }, [loginWithGoogle, openAuthModal]);
 
   // Smoothly transition into the Main Workspace immediately upon signing in
   const prevAuthRef = React.useRef(isAuthenticated);
@@ -265,6 +358,14 @@ function AppContent() {
           onLanguageChange={handleLanguageChange}
         />
         <GoogleAuthModal />
+        {isCompletingGoogleAuth && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white border border-[#E5DFD3] rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3 text-[#1C1917] text-sm font-bold">
+              <span className="w-4 h-4 rounded-full border-2 border-[#166534] border-t-transparent animate-spin" />
+              <span>Completing Google Sign-In...</span>
+            </div>
+          </div>
+        )}
       </>
     );
   }

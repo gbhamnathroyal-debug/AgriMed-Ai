@@ -59,6 +59,8 @@ export const GoogleAuthModal: React.FC = () => {
     isAuthModalOpen,
     closeAuthModal,
     authModalReason,
+    authModalError,
+    clearAuthModalError,
     initialAuthTab,
     signup,
     login,
@@ -112,6 +114,10 @@ export const GoogleAuthModal: React.FC = () => {
     if (isAuthModalOpen) {
       resetFormFields();
       setActiveTab(initialAuthTab || 'signup');
+      if (authModalError) {
+        setErrorMessage(authModalError);
+        clearAuthModalError();
+      }
 
       let cancelled = false;
       setIsCheckingDb(true);
@@ -149,7 +155,7 @@ export const GoogleAuthModal: React.FC = () => {
     } else {
       resetFormFields();
     }
-  }, [isAuthModalOpen, initialAuthTab]);
+  }, [isAuthModalOpen, initialAuthTab, authModalError, clearAuthModalError]);
 
   const signupPasswordCheck = evaluateSignupPassword(password);
 
@@ -271,9 +277,21 @@ export const GoogleAuthModal: React.FC = () => {
   const handleGoogleButtonClick = async () => {
     setErrorMessage(null);
     setInfoMessage(null);
-    setIsGoogleLoading(true);
     const currentMode: 'signup' | 'login' = activeTab;
+    const googleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
+    if (googleClientId) {
+      setIsGoogleLoading(true);
+      sessionStorage.setItem('agrimed_google_mode', currentMode);
+      const oauthUrl =
+        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(googleClientId)}` +
+        `&redirect_uri=${encodeURIComponent(window.location.origin)}` +
+        `&response_type=token&scope=openid%20email%20profile&prompt=select_account`;
+      window.location.href = oauthUrl;
+      return;
+    }
+
+    setIsGoogleLoading(true);
     try {
       const googleResult = await signInWithGoogleAccountChooser();
       const res = await loginWithGoogle({

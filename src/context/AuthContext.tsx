@@ -10,6 +10,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAuthModalOpen: boolean;
   authModalReason: string;
+  authModalError: string | null;
   initialAuthTab: 'signup' | 'login';
   signup: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string; code?: string; email?: string }>;
   login: (data: { email: string; password: string }) => Promise<{ success: boolean; error?: string; code?: string; email?: string }>;
@@ -17,13 +18,15 @@ interface AuthContextType {
     mode?: 'signup' | 'login';
     credential?: string;
     accessToken?: string;
+    googleId?: string;
     email?: string;
     name?: string;
     avatarUrl?: string;
   }) => Promise<{ success: boolean; error?: string; code?: string; email?: string }>;
   logout: () => Promise<void>;
-  openAuthModal: (reason?: string, defaultTab?: 'signup' | 'login') => void;
+  openAuthModal: (reason?: string, defaultTab?: 'signup' | 'login', initialError?: string) => void;
   closeAuthModal: () => void;
+  clearAuthModalError: () => void;
   authFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
@@ -52,6 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalReason, setAuthModalReason] = useState<string>('Sign in to access your agricultural diagnostic workspace');
+  const [authModalError, setAuthModalError] = useState<string | null>(null);
   const [initialAuthTab, setInitialAuthTab] = useState<'signup' | 'login'>('signup');
 
   const tokenRef = useRef<string | null>(token);
@@ -123,13 +127,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [token, clearAuthStorage]);
 
-  const openAuthModal = useCallback((reason?: string, defaultTab: 'signup' | 'login' = 'signup') => {
+  const openAuthModal = useCallback((reason?: string, defaultTab: 'signup' | 'login' = 'signup', initialError?: string) => {
     if (reason) setAuthModalReason(reason);
     setInitialAuthTab(defaultTab);
+    setAuthModalError(initialError || null);
     setIsAuthModalOpen(true);
   }, []);
 
+  const clearAuthModalError = useCallback(() => {
+    setAuthModalError(null);
+  }, []);
+
   const closeAuthModal = useCallback(() => {
+    setAuthModalError(null);
     setIsAuthModalOpen(false);
   }, []);
 
@@ -213,6 +223,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     mode?: 'signup' | 'login';
     credential?: string;
     accessToken?: string;
+    googleId?: string;
     email?: string;
     name?: string;
     avatarUrl?: string;
@@ -299,6 +310,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAdmin: user?.role === 'admin',
         isAuthModalOpen,
         authModalReason,
+        authModalError,
         initialAuthTab,
         signup,
         login,
@@ -306,6 +318,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         openAuthModal,
         closeAuthModal,
+        clearAuthModalError,
         authFetch,
       }}
     >

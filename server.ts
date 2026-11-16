@@ -518,14 +518,14 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 // 3. Google OAuth & Google Identity Handler (Strictly requires real user credentials/email—no dummy auto-generation)
 const handleGoogleAuth = async (req: Request, res: Response) => {
   try {
-    const { credential, accessToken, email, name, avatarUrl } = req.body;
+    const { credential, accessToken, email, name, avatarUrl, googleId: bodyGoogleId } = req.body;
 
     let targetEmail = '';
     let targetName = '';
     let targetAvatar = typeof avatarUrl === 'string' ? avatarUrl : '';
-    let googleId = '';
+    let googleId = typeof bodyGoogleId === 'string' ? bodyGoogleId.trim() : '';
 
-    // Option A: Real Google OAuth2 Access Token (fetched via Firebase GoogleAuthProvider / OAuth2)
+    // Option A: Real Google OAuth2 Access Token (fetched via Google OAuth redirect / Firebase GoogleAuthProvider)
     if (accessToken && typeof accessToken === 'string') {
       try {
         const userInfoResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -534,7 +534,7 @@ const handleGoogleAuth = async (req: Request, res: Response) => {
         if (userInfoResp.ok) {
           const info = await userInfoResp.json();
           if (info.email) {
-            googleId = info.sub || '';
+            googleId = info.sub || googleId || '';
             targetEmail = String(info.email).trim().toLowerCase();
             targetName = String(info.name || info.given_name || targetEmail.split('@')[0]).trim();
             targetAvatar = info.picture || targetAvatar;
@@ -560,7 +560,7 @@ const handleGoogleAuth = async (req: Request, res: Response) => {
         if (!payload.email) {
           return res.status(400).json({ error: 'Google credential does not contain an email address.' });
         }
-        googleId = payload.sub || payload.user_id || '';
+        googleId = payload.sub || payload.user_id || googleId || '';
         targetEmail = String(payload.email).trim().toLowerCase();
         targetName = String(payload.name || payload.given_name || targetEmail.split('@')[0]).trim();
         targetAvatar = payload.picture || targetAvatar;
@@ -571,11 +571,13 @@ const handleGoogleAuth = async (req: Request, res: Response) => {
       }
     }
 
-    // Option C: Fallback explicit Google email & name when OAuth popup environment is restricted
+    // Option C: Verified Google userinfo profile ({ email, name, googleId: sub, avatarUrl: picture }) or restricted preview fallback
     if (!targetEmail && email && typeof email === 'string' && email.includes('@')) {
       targetEmail = email.trim().toLowerCase();
       targetName = (typeof name === 'string' && name.trim()) ? name.trim() : targetEmail.split('@')[0];
-      googleId = `google_${crypto.createHash('sha256').update(targetEmail).digest('hex').slice(0, 16)}`;
+      if (!googleId) {
+        googleId = `google_${crypto.createHash('sha256').update(targetEmail).digest('hex').slice(0, 16)}`;
+      }
     }
 
     if (!targetEmail) {
