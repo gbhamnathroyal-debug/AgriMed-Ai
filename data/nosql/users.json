@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "usr_mwf6xpn7ed3a13e43a2f",
+    "googleId": "110407956011470103036",
+    "fullName": "Bhamnath Gandudi",
+    "name": "Bhamnath Gandudi",
+    "email": "gandudibhamnath@gmail.com",
+    "authProvider": "google",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocIWcvXeVcCOILx-5oDS6zpPdNFAORH7GFr529roZXwByuLimg=s96-c",
+    "role": "farmer",
+    "createdAt": "2026-11-13T16:28:08.007Z",
+    "lastLoginAt": "2026-11-15T08:29:09.536Z"
+  },
+  {
+    "_id": "usr_mwglgv5w65d30225a790",
+    "googleId": "102508993578658871606",
+    "fullName": "Varmani Gandudi",
+    "name": "Varmani Gandudi",
+    "email": "gandudivarmani@gmail.com",
+    "authProvider": "google",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocLpq35I8AAUQCF99tSYltMQWGqYD1taV16vpDZY0CiAbLCUk20=s96-c",
+    "role": "farmer",
+    "createdAt": "2026-11-14T16:02:42.436Z",
+    "lastLoginAt": "2026-11-14T16:02:42.436Z"
+  },
+  {
+    "_id": "usr_mwhkpvn54e57ce517579",
+    "googleId": "113614058192488057167",
+    "fullName": "G. Bhamnath Royal",
+    "name": "G. Bhamnath Royal",
+    "email": "gbhamnathroyal@gmail.com",
+    "authProvider": "google",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocI4i93OlSbf1paoG6mcdwItomNzHreRJU0AWpSSjnt-c42VZ_mT=s96-c",
+    "role": "admin",
+    "createdAt": "2026-11-15T08:29:29.519Z",
+    "lastLoginAt": "2026-11-15T08:32:47.536Z"
+  }
+]

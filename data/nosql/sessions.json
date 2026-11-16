@@ -1,0 +1,62 @@
+{
+  "agri_gauth_3163f0207c78d9eb3304dc24ec258ea96b587145f0d9ef74": {
+    "userId": "usr_mwdj216b3114fc88ef74",
+    "expiresAt": 1797078823986
+  },
+  "agri_gauth_1e1a9b8e8ef433db180343ddc3a1a081125d9f75dcda8ab3": {
+    "userId": "usr_mwdj216b3114fc88ef74",
+    "expiresAt": 1797078833095
+  },
+  "agri_gauth_59933059d87ccd6668f0016f8e7366d1fae4829c2604b434": {
+    "userId": "usr_mwdj216b3114fc88ef74",
+    "expiresAt": 1797078846903
+  },
+  "agri_gauth_11fcb6958a4bc9881f9d762508de8d9cfe689f8b217f5cf7": {
+    "userId": "usr_bhamnath_farmer",
+    "expiresAt": 1797079639975
+  },
+  "agri_gauth_7dd4f3ae7842614e1ae4181e8177c23469def50f5e043aad": {
+    "userId": "usr_bhamnath_admin",
+    "expiresAt": 1797079639983
+  },
+  "agri_gauth_6ea207d07b75b1a566ae19bc6428d650ddb59d92611d276b": {
+    "userId": "usr_mwdjlwoi831fc3276c2c",
+    "expiresAt": 1797079639986
+  },
+  "agri_gauth_250073d22e7bbf963ef4c99c85d17e81b93dbe5e1cafb53c": {
+    "userId": "usr_mwepg5t9d993531b8d7e",
+    "expiresAt": 1797149915864
+  },
+  "agri_gauth_508f5c7966a31de5cf873d40a93b1fc2284fb67200299b42": {
+    "userId": "usr_mwepg5t9d993531b8d7e",
+    "expiresAt": 1797149916020
+  },
+  "agri_gauth_bdc377afb8b34ca65f9cfb4665814167413d51f75b00b63d": {
+    "userId": "usr_mwepg614555d65ef9bda",
+    "expiresAt": 1797149916041
+  },
+  "agri_gauth_2fabe96dd4dedd6e2da50e81d4dafb854d4c46c25c120680": {
+    "userId": "usr_mwerqwydc3a55719a3d8",
+    "expiresAt": 1797153776812
+  },
+  "agri_gauth_3f7f165e5ac978d0d9f2ed62b86a6fb758534cfd41f62581": {
+    "userId": "usr_mwf6kmwy7c4c4c3eab9b",
+    "expiresAt": 1797178678104
+  },
+  "agri_gauth_75648ebeb15666d9e9e09809b39e6b6a54a858dc6d61cb0d": {
+    "userId": "usr_mwf6kmwy7c4c4c3eab9b",
+    "expiresAt": 1797178678243
+  },
+  "agri_gauth_3bf883fa8ecbb238d1d430e44eaa9c5996d2cc2120ef2595": {
+    "userId": "usr_mwf6kn3ef48f4acae6c8",
+    "expiresAt": 1797178678251
+  },
+  "agri_gauth_16d3947f22dcc119d8d630fd719d7e8d24bd3027c35d7c12": {
+    "userId": "usr_mwfy7md13acab4c9e713",
+    "expiresAt": 1797225100173
+  },
+  "agri_gauth_04f2056a419d3029c68427b0973ae3322d86c9f9e506cfcb": {
+    "userId": "usr_mwfy7md13acab4c9e713",
+    "expiresAt": 1797225100398
+  }
+}

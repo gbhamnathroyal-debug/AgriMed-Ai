@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-botanical: #F5F2EB;
+    --surface-white: #FFFFFF;
+    --border-sage: #E5DFD3;
+    --forest-green: #166534;
+    --forest-green-hover: #14532D;
+    --terracotta: #C2410C;
+    --peach-sand: #FFEDD5;
+    --amber-warning: #D97706;
+    --amber-soft: #FEF3C7;
+    --text-charcoal: #1C1917;
+    --text-slate: #57534E;
+  }
+
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  body {
+    background-color: #F5F2EB;
+    color: #57534E;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F2EB;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D6CFC1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #166534;
+}
+
+.botanical-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD3;
+  box-shadow: 0 4px 16px rgba(28, 25, 23, 0.05);
+}
+
+.amber-soft-badge {
+  background-color: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.terracotta-soft-badge {
+  background-color: #FFEDD5;
+  color: #C2410C;
+  border: 1px solid #FED7AA;
+}

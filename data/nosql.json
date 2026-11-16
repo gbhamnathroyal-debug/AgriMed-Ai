@@ -1,0 +1,464 @@
+{
+  "users": [
+    {
+      "_id": "usr_bhamnath_farmer",
+      "googleId": "google_sandbox_default_1",
+      "name": "Bhamnath Royal",
+      "email": "gbhamnathroyal@gmail.com",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "role": "admin",
+      "createdAt": "2026-11-12T10:38:37.513Z",
+      "lastLoginAt": "2026-11-12T12:47:19.974Z"
+    },
+    {
+      "_id": "usr_bhamnath_admin",
+      "googleId": "google_sandbox_default_2",
+      "name": "Dr. Bhamnath Royal",
+      "email": "gbhamnathroyal+admin@gmail.com",
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "role": "admin",
+      "createdAt": "2026-11-12T10:38:37.513Z",
+      "lastLoginAt": "2026-11-12T12:47:19.982Z"
+    },
+    {
+      "_id": "usr_mwdflnrx2f32ec6db2e8",
+      "googleId": "g_1794480909981",
+      "name": "Test Farmer",
+      "email": "farmer@agrimed.ai",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "role": "farmer",
+      "createdAt": "2026-11-12T10:55:09.981Z",
+      "lastLoginAt": "2026-11-12T10:55:09.981Z"
+    },
+    {
+      "_id": "usr_mwdj216b3114fc88ef74",
+      "googleId": "g_preview_6e8ea1aadabc",
+      "name": "Rajesh Patel",
+      "email": "rajesh.patel@farmer.in",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "role": "farmer",
+      "createdAt": "2026-11-12T12:31:52.691Z",
+      "lastLoginAt": "2026-11-12T12:34:06.903Z"
+    },
+    {
+      "_id": "usr_mwdjlwoi831fc3276c2c",
+      "googleId": "g_preview_37ddfbeb5aa2",
+      "name": "Ramesh Patel",
+      "email": "ramesh.patel@gmail.com",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "role": "farmer",
+      "createdAt": "2026-11-12T12:47:19.986Z",
+      "lastLoginAt": "2026-11-12T12:47:19.986Z"
+    }
+  ],
+  "diagnoses": [],
+  "disease_information": [
+    {
+      "_id": "icar_wheat_yellow_rust",
+      "diseaseName": "Stripe / Yellow Rust",
+      "scientificName": "Puccinia striiformis f. sp. tritici",
+      "crop": "Wheat",
+      "cropCategory": "Grains & Cereals",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Propiconazole 25% EC (Tilt / Bumper)",
+      "activeIngredient": "Propiconazole 25% EC",
+      "tradeNames": [
+        "Tilt 25 EC",
+        "Bumper 25 EC"
+      ],
+      "formulation": "25% EC",
+      "safeDosagePerLiter": 1,
+      "dosageUnit": "ml",
+      "safeDosagePer16LTank": 16,
+      "organicAlternative": "Trichoderma viride + Cold-Pressed Neem Oil (10,000 ppm)",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 30,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Indian Institute of Wheat and Barley Research (IIWBR) & CIBRC 2024 Approved List",
+      "culturalPractices": [
+        "Sow resistant wheat cultivars (e.g., HD-2967, DBW-187, PBW-550)",
+        "Avoid late sowing beyond the second week of November to escape virulent late-season rust cycles"
+      ],
+      "safetyWarnings": [
+        "Wear chemical-resistant nitrile gloves and eye goggles during knapsack tank filling",
+        "Do not allow grazing livestock into the field for 14 days after spraying"
+      ]
+    },
+    {
+      "_id": "icar_wheat_brown_rust",
+      "diseaseName": "Leaf / Brown Rust",
+      "scientificName": "Puccinia triticina",
+      "crop": "Wheat",
+      "cropCategory": "Grains & Cereals",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Tebuconazole 25.9% m/m EC (Folicur)",
+      "activeIngredient": "Tebuconazole 25.9% EC",
+      "tradeNames": [
+        "Folicur",
+        "Orius"
+      ],
+      "formulation": "25.9% EC",
+      "safeDosagePerLiter": 1.25,
+      "dosageUnit": "ml",
+      "safeDosagePer16LTank": 20,
+      "organicAlternative": "Pseudomonas fluorescens 1.5% WP + Garlic-Chilli Extract",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 35,
+      "reiHours": 24,
+      "sourceReference": "ICAR-IIWBR Crop Protection Manual & CIBRC Central Pesticide Board",
+      "culturalPractices": [
+        "Balanced nitrogen application; avoid excess urea which creates lush succulent leaves prone to rust",
+        "Field monitoring starting early January across northern wheat belt"
+      ],
+      "safetyWarnings": [
+        "Maintain 10-meter buffer zone from fish ponds or open irrigation canals"
+      ]
+    },
+    {
+      "_id": "icar_rice_blast",
+      "diseaseName": "Rice Blast (Leaf & Neck Blast)",
+      "scientificName": "Magnaporthe oryzae (Pyricularia oryzae)",
+      "crop": "Rice",
+      "cropCategory": "Grains & Cereals",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Tricyclazole 75% WP (Beam / Baan)",
+      "activeIngredient": "Tricyclazole 75% WP",
+      "tradeNames": [
+        "Beam 75 WP",
+        "Baan",
+        "Blastoff"
+      ],
+      "formulation": "75% WP",
+      "safeDosagePerLiter": 0.75,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 12,
+      "organicAlternative": "Pseudomonas fluorescens (Pf-1 strain) 1.5% Liquid formulation",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "ml",
+      "phiDays": 30,
+      "reiHours": 24,
+      "sourceReference": "ICAR-National Rice Research Institute (NRRI) & CIBRC Schedule",
+      "culturalPractices": [
+        "Split nitrogen top dressings into 3-4 split doses rather than heavy basal loading",
+        "Maintain continuous shallow standing water (2-3 cm) during critical tillering"
+      ],
+      "safetyWarnings": [
+        "Highly toxic to aquatic organisms; prevent direct run-off into aquaculture ponds"
+      ]
+    },
+    {
+      "_id": "icar_rice_bacterial_blight",
+      "diseaseName": "Bacterial Leaf Blight (BLB)",
+      "scientificName": "Xanthomonas oryzae pv. oryzae",
+      "crop": "Rice",
+      "cropCategory": "Grains & Cereals",
+      "pathogenType": "Bacterial",
+      "verifiedChemical": "Streptocycline (90:10) + Copper Oxychloride 50 WP",
+      "activeIngredient": "Streptomycin sulphate 90% + Tetracycline 10% + COC",
+      "tradeNames": [
+        "Streptocycline",
+        "Plantomycin",
+        "Blitox-50"
+      ],
+      "formulation": "SP + WP Tank Mix",
+      "safeDosagePerLiter": 0.15,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 3,
+      "organicAlternative": "Fresh Cow Dung Extract (20%) + Turmeric Rhizome Powder (2 g/L)",
+      "organicDosagePer16LTank": 300,
+      "organicUnit": "ml",
+      "phiDays": 21,
+      "reiHours": 24,
+      "sourceReference": "ICAR-NRRI Cuttack & Directorate of Rice Research (IIRR) Hyderabad",
+      "culturalPractices": [
+        "Drain excess field water temporarily to reduce bacterial ooze spread through flood water",
+        "Refrain from clipping seedling tips at transplanting"
+      ],
+      "safetyWarnings": [
+        "Wear protective mask to avoid inhaling antibiotic spray mist"
+      ]
+    },
+    {
+      "_id": "icar_tomato_early_blight",
+      "diseaseName": "Early Blight",
+      "scientificName": "Alternaria solani",
+      "crop": "Tomato",
+      "cropCategory": "Vegetables",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Mancozeb 75% WP or Azoxystrobin 18.2% + Difenoconazole 11.4% SC",
+      "activeIngredient": "Mancozeb 75% WP",
+      "tradeNames": [
+        "Dithane M-45",
+        "Indofil M-45",
+        "Amistar Top"
+      ],
+      "formulation": "75% WP",
+      "safeDosagePerLiter": 2.5,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 40,
+      "organicAlternative": "Trichoderma harzianum 2% WP (2x10^9 cfu/g) + Neem 10,000 ppm",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 7,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Indian Institute of Vegetable Research (IIVR) Varanasi & CIBRC 2024",
+      "culturalPractices": [
+        "Stake indeterminate plants and prune lower 30cm of senescing leaves to eliminate soil-splash inocula",
+        "Drip irrigation only; avoid overhead sprinklers that wet canopy"
+      ],
+      "safetyWarnings": [
+        "Observe 7-day harvest waiting period strictly before picking fruits for market"
+      ]
+    },
+    {
+      "_id": "icar_tomato_late_blight",
+      "diseaseName": "Late Blight",
+      "scientificName": "Phytophthora infestans",
+      "crop": "Tomato",
+      "cropCategory": "Vegetables",
+      "pathogenType": "Oomycete",
+      "verifiedChemical": "Metalaxyl-M 4% + Mancozeb 64% WP (Ridomil Gold)",
+      "activeIngredient": "Metalaxyl-M + Mancozeb",
+      "tradeNames": [
+        "Ridomil Gold 68 WG",
+        "Matco",
+        "Master"
+      ],
+      "formulation": "68% WG",
+      "safeDosagePerLiter": 2,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 32,
+      "organicAlternative": "Copper Hydroxide 77% WP (Kocide) + Bordeaux Mixture (1%)",
+      "organicDosagePer16LTank": 35,
+      "organicUnit": "g",
+      "phiDays": 5,
+      "reiHours": 24,
+      "sourceReference": "ICAR-IIVR & FAO Global Solanaceous Pathology Guide",
+      "culturalPractices": [
+        "Eradicate volunteer tomato/potato weeds near boundaries",
+        "Spray immediately when daytime temperatures drop to 18-22°C with high relative humidity (>90%)"
+      ],
+      "safetyWarnings": [
+        "Avoid spraying within 48 hours of expected heavy rainfall to prevent wash-off"
+      ]
+    },
+    {
+      "_id": "icar_potato_late_blight",
+      "diseaseName": "Late Blight of Potato",
+      "scientificName": "Phytophthora infestans",
+      "crop": "Potato",
+      "cropCategory": "Vegetables",
+      "pathogenType": "Oomycete",
+      "verifiedChemical": "Cymoxanil 8% + Mancozeb 64% WP (Curzate M8)",
+      "activeIngredient": "Cymoxanil + Mancozeb",
+      "tradeNames": [
+        "Curzate M8",
+        "Moximate",
+        "Acrobat"
+      ],
+      "formulation": "72% WP",
+      "safeDosagePerLiter": 2.5,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 40,
+      "organicAlternative": "Bacillus subtilis + Potassium Silicate (2 ml/L)",
+      "organicDosagePer16LTank": 64,
+      "organicUnit": "g",
+      "phiDays": 14,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Central Potato Research Institute (CPRI) Shimla & CIBRC",
+      "culturalPractices": [
+        "Proper earthing up to create a 15-20cm soil ridge preventing sporangia wash into underground tubers",
+        "Dehaulm crop 10 days prior to harvest if late blight occurs in late season"
+      ],
+      "safetyWarnings": [
+        "Do not compost infected haulms; burn or bury deeply off-field"
+      ]
+    },
+    {
+      "_id": "icar_chilli_anthracnose",
+      "diseaseName": "Anthracnose & Fruit Rot (Dieback)",
+      "scientificName": "Colletotrichum capsici / C. gloeosporioides",
+      "crop": "Chilli",
+      "cropCategory": "Vegetables",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Azoxystrobin 18.2% + Difenoconazole 11.4% SC (Amistar Top)",
+      "activeIngredient": "Azoxystrobin + Difenoconazole",
+      "tradeNames": [
+        "Amistar Top",
+        "Godiwa Super",
+        "Priaxor"
+      ],
+      "formulation": "29.6% SC",
+      "safeDosagePerLiter": 1,
+      "dosageUnit": "ml",
+      "safeDosagePer16LTank": 16,
+      "organicAlternative": "Bacillus subtilis 1.5% WP + Panchagavya 3% foliar spray",
+      "organicDosagePer16LTank": 64,
+      "organicUnit": "g",
+      "phiDays": 5,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Indian Institute of Horticultural Research (IIHR) Bengaluru & CIBRC",
+      "culturalPractices": [
+        "Collect and destroy shriveled diseased pods away from the crop canopy",
+        "Avoid excessive furrow flooding that elevates canopy microclimate humidity"
+      ],
+      "safetyWarnings": [
+        "Wear eye protection to prevent capsicum spray back into eyes"
+      ]
+    },
+    {
+      "_id": "icar_cotton_boll_rot",
+      "diseaseName": "Boll Rot Complex & Bacterial Blight",
+      "scientificName": "Xanthomonas citri pv. malvacearum / Fusarium spp.",
+      "crop": "Cotton",
+      "cropCategory": "Cash Crops",
+      "pathogenType": "Bacterial",
+      "verifiedChemical": "Copper Oxychloride 50% WP + Streptocycline (90:10)",
+      "activeIngredient": "Copper Oxychloride 50% + Streptomycin 90%",
+      "tradeNames": [
+        "Blitox 50 WP",
+        "Cupramar",
+        "Streptocycline"
+      ],
+      "formulation": "50% WP",
+      "safeDosagePerLiter": 2.5,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 40,
+      "organicAlternative": "Pseudomonas fluorescens 1.5% WP + Neem Oil 10,000 ppm",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 21,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Central Institute for Cotton Research (CICR) Nagpur & CIBRC",
+      "culturalPractices": [
+        "Adopt wider row spacing (90x60 cm) to allow sun penetration and wind aeration between cotton rows",
+        "Remove early infected bottom squares and damaged bolls"
+      ],
+      "safetyWarnings": [
+        "Wear long pants and protective chemical apron while walking between tall cotton canopies"
+      ]
+    },
+    {
+      "_id": "icar_coffee_leaf_rust",
+      "diseaseName": "Coffee Leaf Rust (Roya)",
+      "scientificName": "Hemileia vastatrix",
+      "crop": "Coffee",
+      "cropCategory": "Spices & Plantation",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Bordeaux Mixture (0.5% - 1.0%) or Hexaconazole 5% EC",
+      "activeIngredient": "Copper sulphate + Quicklime (or Hexaconazole 5% EC)",
+      "tradeNames": [
+        "Bordeaux Pre-Mix",
+        "Contaf 5 EC",
+        "Sitara"
+      ],
+      "formulation": "5% EC",
+      "safeDosagePerLiter": 2,
+      "dosageUnit": "ml",
+      "safeDosagePer16LTank": 32,
+      "organicAlternative": "Beauveria bassiana + Trichoderma harzianum + 1% Bordeaux Mixture",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 30,
+      "reiHours": 24,
+      "sourceReference": "Central Coffee Research Institute (CCRI) Balehonnur / Coffee Board of India",
+      "culturalPractices": [
+        "Two mandatory pre-monsoon and post-monsoon umbrella shade tree prunings to permit 50-60% dappled sunlight",
+        "Clean leaf underside coverage is mandatory when spraying knapsack lances"
+      ],
+      "safetyWarnings": [
+        "Ensure sprayers use brass nozzles with clean filters to avoid clogging with lime particles"
+      ]
+    },
+    {
+      "_id": "icar_mango_anthracnose",
+      "diseaseName": "Mango Anthracnose & Blossom Blight",
+      "scientificName": "Colletotrichum gloeosporioides",
+      "crop": "Mango",
+      "cropCategory": "Fruits",
+      "pathogenType": "Fungal",
+      "verifiedChemical": "Carbendazim 12% + Mancozeb 63% WP (Saaf)",
+      "activeIngredient": "Carbendazim + Mancozeb",
+      "tradeNames": [
+        "Saaf",
+        "Sixer",
+        "Companion"
+      ],
+      "formulation": "75% WP",
+      "safeDosagePerLiter": 2,
+      "dosageUnit": "g",
+      "safeDosagePer16LTank": 32,
+      "organicAlternative": "Ampelomyces quisqualis + Cold Pressed Neem Oil 1500 ppm",
+      "organicDosagePer16LTank": 60,
+      "organicUnit": "ml",
+      "phiDays": 15,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Central Institute for Subtropical Horticulture (CISH) Lucknow",
+      "culturalPractices": [
+        "Prune dead twigs 10 cm below infected margins and paste cut surfaces with copper oxychloride paste",
+        "Avoid spraying during peak honeybee foraging hours (9 AM - 12 PM) during flowering"
+      ],
+      "safetyWarnings": [
+        "Highly toxic to beneficial pollinators; avoid direct spray onto open blossoms"
+      ]
+    },
+    {
+      "_id": "icar_corn_fall_armyworm",
+      "diseaseName": "Fall Armyworm & Turcicum Leaf Blight",
+      "scientificName": "Spodoptera frugiperda / Exserohilum turcicum",
+      "crop": "Corn",
+      "cropCategory": "Grains & Cereals",
+      "pathogenType": "Pest / Insect / Mite",
+      "verifiedChemical": "Chlorantraniliprole 18.5% SC (Coragen) or Emamectin Benzoate 5% SG",
+      "activeIngredient": "Chlorantraniliprole 18.5% SC",
+      "tradeNames": [
+        "Coragen",
+        "Proclaim",
+        "Voliam"
+      ],
+      "formulation": "18.5% SC",
+      "safeDosagePerLiter": 0.4,
+      "dosageUnit": "ml",
+      "safeDosagePer16LTank": 6.5,
+      "organicAlternative": "Metarhizium anisopliae (or Bt kurstaki) 1.15% WP @ 5 g/L applied directly into whorls",
+      "organicDosagePer16LTank": 80,
+      "organicUnit": "g",
+      "phiDays": 14,
+      "reiHours": 24,
+      "sourceReference": "ICAR-Indian Institute of Maize Research (IIMR) Ludhiana & CIBRC Ad-hoc Protocol",
+      "culturalPractices": [
+        "Direct spray nozzle nozzle cone strictly into central plant whorl, not broadcast on outer leaves",
+        "Install 5 pheromone traps per acre for early detection of adult moths"
+      ],
+      "safetyWarnings": [
+        "Wear respirator mask when directing spray into whorls"
+      ]
+    }
+  ],
+  "consultations": [
+    {
+      "_id": "cst_mwdf19kke63ca2801cf6",
+      "id": "cst_mwdf19kke63ca2801cf6",
+      "userId": "usr_bhamnath_farmer",
+      "crop": "Wheat",
+      "cropCategory": "Grains & Cereals",
+      "symptoms": [
+        "Linear yellow-orange powdery rust pustules"
+      ],
+      "diseaseName": "Stripe / Yellow Rust",
+      "scientificName": "Puccinia striiformis",
+      "pathogenType": "Fungal",
+      "confidenceScore": 95,
+      "prescribedChemical": "Tilt 25 EC",
+      "chemicalDosagePerTank": "16 ml per 16L tank",
+      "organicAlternative": "Trichoderma viride",
+      "phiDays": 30,
+      "tankSizeLiters": 16,
+      "notes": "Field test consultation",
+      "createdAt": "2026-11-12T10:39:18.452Z"
+    }
+  ],
+  "updatedAt": "2026-11-12T12:47:19.996Z"
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "cst_mwdf19kke63ca2801cf6",
+    "id": "cst_mwdf19kke63ca2801cf6",
+    "userId": "usr_bhamnath_farmer",
+    "crop": "Wheat",
+    "cropCategory": "Grains & Cereals",
+    "symptoms": [
+      "Linear yellow-orange powdery rust pustules"
+    ],
+    "diseaseName": "Stripe / Yellow Rust",
+    "scientificName": "Puccinia striiformis",
+    "pathogenType": "Fungal",
+    "confidenceScore": 95,
+    "prescribedChemical": "Tilt 25 EC",
+    "chemicalDosagePerTank": "16 ml per 16L tank",
+    "organicAlternative": "Trichoderma viride",
+    "phiDays": 30,
+    "tankSizeLiters": 16,
+    "notes": "Field test consultation",
+    "createdAt": "2026-11-12T10:39:18.452Z"
+  }
+]

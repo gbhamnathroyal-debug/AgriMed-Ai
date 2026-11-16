@@ -1,0 +1,6 @@
+{
+  "name": "AgriMed AI: Crop Disease & Medicine Advisor",
+  "description": "Professional agricultural diagnostic engine and AI agronomist advisor for crop diseases, chemical dosages per 16L spray tank, bio-control solutions, and PHI safety.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
