@@ -259,7 +259,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({
             ) : (
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
                 <button
-                  onClick={() => openAuthModal()}
+                  onClick={() => openAuthModal(undefined, 'login')}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#241B16] hover:bg-[#2F231D] border border-[#3D2F27] text-[11px] sm:text-sm font-bold text-[#FAF7F2] hover:text-green-300 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24">

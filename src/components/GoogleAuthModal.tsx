@@ -518,28 +518,42 @@ export const GoogleAuthModal: React.FC = () => {
             </form>
           ) : (
             <>
-              {/* Two-Tab Segmented Selector */}
-              <div className="p-1 rounded-2xl bg-[#F7F9F6] border border-[#E2E8E1] grid grid-cols-2 gap-1">
+              {/* Two-Tab Segmented Selector with Animated Green Active Pill */}
+              <div
+                role="tablist"
+                aria-label="Authentication mode"
+                className="relative p-1 rounded-2xl bg-[#F5F2EB] border border-[#E5DFD3] grid grid-cols-2"
+              >
+                <div
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl bg-[#166534] shadow-sm transition-transform duration-200 ease-out ${
+                    activeTab === 'login' ? 'translate-x-full' : 'translate-x-0'
+                  }`}
+                />
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'signup'}
                   disabled={isLoading || isGoogleLoading}
                   onClick={() => handleTabSwitch('signup')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`relative z-10 py-2 px-3 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'signup'
-                      ? 'bg-[#15803D] text-white shadow-xs'
-                      : 'text-[#4B5563] hover:text-[#111827] hover:bg-white/60'
+                      ? 'text-white'
+                      : 'text-[#57534E] hover:text-[#1C1917]'
                   }`}
                 >
                   <span>Create Account</span>
                 </button>
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'login'}
                   disabled={isLoading || isGoogleLoading}
                   onClick={() => handleTabSwitch('login')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`relative z-10 py-2 px-3 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'login'
-                      ? 'bg-[#15803D] text-white shadow-xs'
-                      : 'text-[#4B5563] hover:text-[#111827] hover:bg-white/60'
+                      ? 'text-white'
+                      : 'text-[#57534E] hover:text-[#1C1917]'
                   }`}
                 >
                   <span>Log In</span>

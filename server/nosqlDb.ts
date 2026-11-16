@@ -13,18 +13,27 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Data directory for local NoSQL JSON fallback mirror
-const dataDir = path.resolve(__dirname, '../data/nosql');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+// Data directory for local NoSQL JSON fallback mirror (use writable /tmp on Vercel serverless)
+const isVercelEnv = Boolean(process.env.VERCEL);
+const bundledDataDir = path.resolve(__dirname, '../data/nosql');
+const bundledPersistentDbFile = path.resolve(__dirname, '../data/nosql_db.json');
+const bundledLegacyFile = path.resolve(__dirname, '../data/nosql.json');
+
+const dataDir = isVercelEnv ? '/tmp/agrimed_nosql' : bundledDataDir;
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Could not initialize local NoSQL data directory:', err);
 }
 
 const usersFile = path.join(dataDir, 'users.json');
 const diagnosesFile = path.join(dataDir, 'diagnoses.json');
 const diseaseInfoFile = path.join(dataDir, 'disease_information.json');
 const legacyConsultationsFile = path.join(dataDir, 'consultations.json');
-const persistentDbFile = path.resolve(__dirname, '../data/nosql_db.json');
-const legacyUnifiedFile = path.resolve(__dirname, '../data/nosql.json');
+const persistentDbFile = isVercelEnv ? '/tmp/agrimed_nosql_db.json' : bundledPersistentDbFile;
+const legacyUnifiedFile = bundledLegacyFile;
 
 interface NoSqlCollections {
   users: User[];
@@ -398,10 +407,14 @@ function syncPersistentDiskDb() {
 
 function atomicSaveCollection(filePath: string, data: any) {
   try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
     syncPersistentDiskDb();
   } catch (err) {
-    console.error(`Failed to save NoSQL file ${filePath}:`, err);
+    console.warn(`Skipped NoSQL disk write (${filePath}):`, (err as any)?.message || err);
   }
 }
 
@@ -429,9 +442,11 @@ export async function initNoSqlDatabase(): Promise<void> {
 
   const sourceFile = fs.existsSync(persistentDbFile)
     ? persistentDbFile
-    : fs.existsSync(legacyUnifiedFile)
-      ? legacyUnifiedFile
-      : null;
+    : fs.existsSync(bundledPersistentDbFile)
+      ? bundledPersistentDbFile
+      : fs.existsSync(legacyUnifiedFile)
+        ? legacyUnifiedFile
+        : null;
 
   if (sourceFile) {
     try {

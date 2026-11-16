@@ -38,10 +38,11 @@ import { askAgronomist, getCropSymptomsFromAi, researchDiseaseWorldwideWithSearc
 import { diagnoseUniversalCrop } from './server/universalDiagnostician.ts';
 import { User } from './src/types/index.ts';
 
-dotenv.config({ override: true });
+dotenv.config({ override: !process.env.VERCEL });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isVercelEnv = Boolean(process.env.VERCEL);
 
 const app = express();
 const PORT = 3000;
@@ -97,10 +98,14 @@ app.use('/api', generalLimiter);
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Serve uploaded plant images safely
-const uploadsDir = path.resolve(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Serve uploaded plant images safely (use writable /tmp on Vercel serverless)
+const uploadsDir = isVercelEnv ? '/tmp/agrimed_uploads' : path.resolve(__dirname, 'public/uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Could not initialize uploads directory:', err);
 }
 app.use('/uploads', express.static(uploadsDir));
 
@@ -187,9 +192,27 @@ const audioUpload = multer({
   },
 });
 
-// Sessions file path (database initialized asynchronously inside startServer)
+// Sessions & Database Initialization (serverless-safe on Vercel + local disk mirror)
+const SESSIONS_FILE = isVercelEnv
+  ? '/tmp/agrimed_sessions.json'
+  : path.join(process.cwd(), 'data', 'nosql', 'sessions.json');
 
-const SESSIONS_FILE = path.join(process.cwd(), 'data', 'nosql', 'sessions.json');
+const SESSION_SECRET =
+  process.env.SESSION_SECRET ||
+  process.env.MONGODB_URI ||
+  process.env.GEMINI_API_KEY ||
+  'agrimed_ai_session_secret_v1';
+
+let dbInitPromise: Promise<void> | null = null;
+export function ensureDbInitialized(): Promise<void> {
+  if (!dbInitPromise) {
+    dbInitPromise = initNoSqlDatabase().catch((err) => {
+      dbInitPromise = null;
+      throw err;
+    });
+  }
+  return dbInitPromise;
+}
 
 function loadSessions(): Map<string, { userId: string; expiresAt: number }> {
   try {
@@ -212,19 +235,57 @@ function saveSessions(sessions: Map<string, { userId: string; expiresAt: number 
   } catch {}
 }
 
-// Persistent active session token store (token -> userId)
+// Active session token store + revocation set + HMAC fallback for multi-instance Vercel serverless
 const activeSessions = loadSessions();
+const revokedTokens = new Set<string>();
+
+function signSessionPayload(payloadB64: string): string {
+  return crypto.createHmac('sha256', SESSION_SECRET).update(payloadB64).digest('base64url');
+}
 
 function createSessionToken(userId: string): string {
-  const token = `agri_gauth_${crypto.randomBytes(24).toString('hex')}`;
-  // 30 days session expiry
-  activeSessions.set(token, {
-    userId,
-    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-  });
+  const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days session expiry
+  const payloadB64 = Buffer.from(
+    JSON.stringify({ userId, expiresAt, jti: crypto.randomBytes(8).toString('hex') })
+  ).toString('base64url');
+  const signature = signSessionPayload(payloadB64);
+  const token = `agri_gauth_${payloadB64}.${signature}`;
+  activeSessions.set(token, { userId, expiresAt });
   saveSessions(activeSessions);
   return token;
 }
+
+function verifySignedSessionToken(token: string): { userId: string; expiresAt: number } | null {
+  if (!token.startsWith('agri_gauth_')) return null;
+  const raw = token.slice('agri_gauth_'.length);
+  const dotIdx = raw.indexOf('.');
+  if (dotIdx <= 0) return null;
+  const payloadB64 = raw.slice(0, dotIdx);
+  const sig = raw.slice(dotIdx + 1);
+  const expectedSig = signSessionPayload(payloadB64);
+  const sigBuf = Buffer.from(sig);
+  const expectedBuf = Buffer.from(expectedSig);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    if (parsed && typeof parsed.userId === 'string' && typeof parsed.expiresAt === 'number') {
+      return { userId: parsed.userId, expiresAt: parsed.expiresAt };
+    }
+  } catch {}
+  return null;
+}
+
+// Ensure MongoDB Atlas & baseline disease data are initialized on cold serverless invocations
+app.use('/api', async (_req: Request, _res: Response, next: NextFunction) => {
+  try {
+    await ensureDbInitialized();
+  } catch (err) {
+    console.warn('Database initialization middleware warning:', err);
+  }
+  next();
+});
 
 // Extend Express Request type with authenticated user
 interface AuthenticatedRequest extends Request {
@@ -239,15 +300,15 @@ async function authenticate(req: AuthenticatedRequest, _res: Response, next: Nex
       ? authHeader.slice(7).trim()
       : (req.headers['x-auth-token'] as string);
 
-    if (token && activeSessions.has(token)) {
-      const session = activeSessions.get(token)!;
-      if (Date.now() < session.expiresAt) {
+    if (token && !revokedTokens.has(token)) {
+      const session = activeSessions.get(token) || verifySignedSessionToken(token);
+      if (session && Date.now() < session.expiresAt) {
         const user = await findUserByIdAsync(session.userId);
         if (user) {
           req.user = user;
           return next();
         }
-      } else {
+      } else if (session && activeSessions.has(token)) {
         activeSessions.delete(token);
         saveSessions(activeSessions);
       }
@@ -594,10 +655,15 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (_req: Authenticate
 
 app.post('/api/auth/logout', requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-  if (token && activeSessions.has(token)) {
-    activeSessions.delete(token);
-    saveSessions(activeSessions);
+  const token = authHeader && authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : (req.headers['x-auth-token'] as string);
+  if (token) {
+    revokedTokens.add(token);
+    if (activeSessions.has(token)) {
+      activeSessions.delete(token);
+      saveSessions(activeSessions);
+    }
   }
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -1140,7 +1206,7 @@ process.on('unhandledRejection', (reason: any) => {
 
 async function startServer() {
   // Connect to MongoDB Atlas ("agrimed") and initialize local mirror before accepting requests
-  await initNoSqlDatabase();
+  await ensureDbInitialized();
 
   const httpServer = http.createServer(app);
   const isProduction = process.env.NODE_ENV === 'production';
@@ -1170,4 +1236,9 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export { app };
+export default app;
